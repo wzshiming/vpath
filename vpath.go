@@ -105,7 +105,6 @@ func (v *vpath) lookup(val reflect.Value, vs []string) (ret []reflect.Value) {
 				val = val.Slice(offset, limit)
 				l = val.Len()
 				for i := 0; i != l; i++ {
-
 					d := val.Index(i)
 					ret = append(ret, d)
 				}
@@ -118,6 +117,15 @@ func (v *vpath) lookup(val reflect.Value, vs []string) (ret []reflect.Value) {
 		switch typ.Key().Kind() {
 		case reflect.String:
 			for _, v := range vs {
+				if v == "*" {
+					keys := val.MapKeys()
+					for _, key := range keys {
+						d := val.MapIndex(key)
+						ret = append(ret, d)
+					}
+					continue
+				}
+
 				d := val.MapIndex(reflect.ValueOf(v))
 				if d.Kind() != reflect.Invalid {
 					ret = append(ret, d)
@@ -130,6 +138,15 @@ func (v *vpath) lookup(val reflect.Value, vs []string) (ret []reflect.Value) {
 		typ := val.Type()
 		m := v.field(typ)
 		for _, v := range vs {
+			if v == "*" {
+				l := val.NumField()
+				for i := 0; i != l; i++ {
+					d := val.Field(i)
+					ret = append(ret, d)
+				}
+				continue
+			}
+
 			i, ok := m[v]
 			if ok {
 				d := val.Field(i)
